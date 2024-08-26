@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tareas</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #03000a; /* Fondo oscuro */
+            color: #ecf0f1; /* Texto blanco */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        #tareas-container {
+            width: 100%;
+            height: 80vh;
+            max-width: 1200px;
+            position: relative;
+            overflow: visible; /* Permitir que las burbujas se salgan del contenedor */
+            background: #000000; /* Fondo oscuro */
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap; /* Permitir burbujas en múltiples líneas */
+            align-content: flex-start; /* Alinear burbujas en el contenedor */
+        }
+
+        .tarea {
+            background-color: #01221b; /* Fondo de burbuja */
+            border-radius: 50%;
+            border: 5px solid;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            position: absolute;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #ecf0f1; /* Texto blanco */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .tarea:hover {
+            transform: scale(1.2);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .tarea.high-priority {
+            border-color: #e74c3c; /* Rojo */
+            width: 150px;
+            height: 150px;
+        }
+
+        .tarea.medium-priority {
+            border-color: #f1c40f; /* Amarillo */
+            width: 120px;
+            height: 120px;
+        }
+
+        .tarea.low-priority {
+            border-color: #2ecc71; /* Verde */
+            width: 90px;
+            height: 90px;
+        }
+
+        #task-detail {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #000000; /* Fondo oscuro */
+            color: #ecf0f1; /* Texto blanco */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 217, 255, 0.4);
+            z-index: 1000;
+            width: 80%;
+            max-width: 600px;
+            transition: opacity 0.3s ease;
+        }
+
+        #task-detail h2 {
+            margin-top: 0;
+            font-size: 22px;
+            color: #ecf0f1; /* Texto blanco */
+        }
+
+        #task-detail p {
+            font-size: 16px;
+            color: #ecf0f1; /* Texto blanco */
+        }
+
+        #task-detail button {
+            background-color: #74140a;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        #task-detail button:hover {
+            background-color: #a31000;
+        }
+
+        #form-container {
+            background-color: #000000; /* Fondo oscuro */
+            color: #ecf0f1; /* Texto blanco */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px #2600ff75;
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 1000;
+        }
+
+        #form-container h2 {
+            margin-top: 0;
+            font-size: 22px;
+            color: #ecf0f1; /* Texto blanco */
+        }
+
+        #form-container input, #form-container select {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: calc(100% - 22px);
+            background-color: #000000; /* Fondo oscuro */
+            color: #ecf0f1; /* Texto blanco */
+        }
+
+        #form-container button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #143f58;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #form-container button:hover {
+            background-color: #2980b9;
+        }
+
+        #open-form-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        #open-form-button:hover {
+            background-color: #21313b;
+        }
+
+        #task-list {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #000000; /* Fondo oscuro */
+            color: #ecf0f1; /* Texto blanco */
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 250px;
+        }
+
+        #task-list h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #ecf0f1; /* Texto blanco */
+        }
+
+        #task-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #task-list li {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="task-list">
+        <h2>Lista</h2>
+        <ul id="task-list-items"></ul>
+    </div>
+
+    <div id="tareas-container"></div>
+
+    <div id="task-detail">
+        <h2 id="task-title"></h2>
+        <p id="task-description"></p>
+        <button onclick="eliminarTarea()">Eliminar Tarea</button>
+        <button onclick="cerrarDetalle()">Cerrar</button>
+    </div>
+
+    <div id="form-container">
+        <h2>Agregar Nueva Tarea</h2>
+        <input type="text" id="tarea-titulo" placeholder="Título de la tarea" required>
+        <input type="text" id="tarea-descripcion" placeholder="Descripción de la tarea" required>
+        <select id="tarea-prioridad">
+            <option value="high">Alta</option>
+            <option value="medium">Media</option>
+            <option value="low">Baja</option>
+        </select>
+        <button onclick="agregarTarea()">Agregar Tarea</button>
+        <button onclick="toggleForm()">Cerrar</button>
+    </div>
+
+    <button id="open-form-button" onclick="toggleForm()">Agregar Tarea</button>
+
+    <script>
+        let tareaSeleccionada = null;
+
+        function mostrarDetalleTarea(tarea) {
+            document.getElementById('task-title').textContent = tarea.titulo;
+            document.getElementById('task-description').textContent = tarea.descripcion;
+            document.getElementById('task-detail').style.display = 'block';
+            tareaSeleccionada = tarea;
+        }
+
+        function cerrarDetalle() {
+            document.getElementById('task-detail').style.display = 'none';
+            tareaSeleccionada = null;
+        }
+
+        function eliminarTarea() {
+            if (tareaSeleccionada) {
+                let tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+                tareas = tareas.filter(t => t.id !== tareaSeleccionada.id);
+                localStorage.setItem('tareas', JSON.stringify(tareas));
+                cerrarDetalle();
+                renderizarTareas();
+                renderizarListaTareas();
+            }
+        }
+
+        function renderizarTareas() {
+            const tareasContainer = document.getElementById('tareas-container');
+            const tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+            tareasContainer.innerHTML = '';
+
+            tareas.forEach((tarea, index) => {
+                const tareaDiv = document.createElement('div');
+                tareaDiv.classList.add('tarea');
+                tareaDiv.classList.add(tarea.prioridad + '-priority');
+                tareaDiv.innerHTML = `<div class="num">${index + 1}</div>`;
+                tareaDiv.onclick = (e) => {
+                    e.stopPropagation(); // Evitar el cierre del detalle al hacer clic
+                    mostrarDetalleTarea(tarea);
+                };
+
+                // Colocamos las burbujas en posiciones aleatorias dentro del contenedor
+                const containerWidth = tareasContainer.clientWidth;
+                const containerHeight = tareasContainer.clientHeight;
+                const maxLeft = containerWidth - tareaDiv.clientWidth;
+                const maxTop = containerHeight - tareaDiv.clientHeight;
+                const left = Math.random() * maxLeft;
+                const top = Math.random() * maxTop;
+
+                tareaDiv.style.left = `${left}px`;
+                tareaDiv.style.top = `${top}px`;
+
+                tareasContainer.appendChild(tareaDiv);
+            });
+        }
+
+        function renderizarListaTareas() {
+            const taskListItems = document.getElementById('task-list-items');
+            const tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+            taskListItems.innerHTML = '';
+
+            tareas.forEach((tarea, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${index + 1}. ${tarea.titulo}`;
+                taskListItems.appendChild(listItem);
+            });
+        }
+
+        function agregarTarea() {
+            const titulo = document.getElementById('tarea-titulo').value;
+            const descripcion = document.getElementById('tarea-descripcion').value;
+            const prioridad = document.getElementById('tarea-prioridad').value;
+
+            if (titulo && descripcion && prioridad) {
+                const tareas = JSON.parse(localStorage.getItem('tareas')) || [];
+                const tarea = {
+                    id: Date.now(),
+                    titulo,
+                    descripcion,
+                    prioridad
+                };
+                tareas.push(tarea);
+                localStorage.setItem('tareas', JSON.stringify(tareas));
+                document.getElementById('tarea-titulo').value = '';
+                document.getElementById('tarea-descripcion').value = '';
+                renderizarTareas();
+                renderizarListaTareas();
+                toggleForm(); // Ocultar el formulario después de agregar la tarea
+            } else {
+                alert("Por favor, completa todos los campos.");
+            }
+        }
+
+        function toggleForm() {
+            const formContainer = document.getElementById('form-container');
+            if (formContainer.style.display === 'none' || formContainer.style.display === '') {
+                formContainer.style.display = 'block';
+            } else {
+                formContainer.style.display = 'none';
+            }
+        }
+
+        window.onload = () => {
+            renderizarTareas();
+            renderizarListaTareas();
+        };
+    </script>
+</body>
+</html>
